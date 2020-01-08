@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <world name="cube">
+  <world name="cube_sim">
     <physics type="ode">
       <max_step_size>0.00001</max_step_size>
       <real_time_update_rate>10000</real_time_update_rate>
