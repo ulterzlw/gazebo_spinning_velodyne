@@ -44,7 +44,7 @@ class VelodynePlugin : public ModelPlugin {
     this->model->GetJointController()->SetVelocityPID(
         this->joint->GetScopedName(), this->pid);
 
-    this->SetVelocity(2*M_PI);
+    this->SetVelocity(20 * M_PI);
 
     // Create the node
     this->node = transport::NodePtr(new transport::Node());
