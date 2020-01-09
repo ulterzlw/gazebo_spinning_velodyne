@@ -100,7 +100,7 @@
           </range>
         </ray>
         <!-- test plugin -->
-        <plugin name="plugin_1" filename="libmy_gazebo_ros_laser.so">
+        <plugin name="plugin_1" filename="liblidar_plugin.so">
           <topicName>test_laser</topicName>
           <frameName>base_link</frameName>
         </plugin>
