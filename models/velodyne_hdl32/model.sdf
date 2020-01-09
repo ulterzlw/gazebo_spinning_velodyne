@@ -61,7 +61,7 @@
             <!-- Use gaussian noise -->
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.02</stddev>
+            <stddev>0.0</stddev>
           </noise>
           <!-- The scan element contains the horizontal and vertical beams.
              We are leaving out the vertical beams for this tutorial. -->
@@ -99,6 +99,11 @@
             <resolution>0.02</resolution>
           </range>
         </ray>
+        <!-- test plugin -->
+        <plugin name="plugin_1" filename="libmy_gazebo_ros_laser.so">
+          <topicName>test_laser</topicName>
+          <frameName>base_link</frameName>
+        </plugin>
       </sensor>
 
       <!-- Vertically offset the top cylinder by the length of the bottom

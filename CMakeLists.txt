@@ -8,8 +8,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(catkin REQUIRED COMPONENTS
+  gazebo_plugins
   roscpp
-  std_msgs
+  sensor_msgs
 )
 
 include_directories(
@@ -18,4 +19,6 @@ include_directories(
 
 # Build our plugin
 add_library(velodyne_plugin SHARED src/velodyne_plugin.cc)
-target_link_libraries(velodyne_plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(velodyne_plugin ${GAZEBO_LIBRARIES})
+add_library(my_gazebo_ros_laser SHARED src/my_gazebo_ros_laser.cc)
+target_link_libraries(my_gazebo_ros_laser RayPlugin ${catkin_LIBRARIES})
