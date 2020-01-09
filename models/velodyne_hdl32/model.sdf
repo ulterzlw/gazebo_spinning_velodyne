@@ -49,7 +49,7 @@
         <!-- Position the ray sensor based on the specification. Also rotate
            it by 90 degrees around the X-axis so that the <horizontal> rays
            become vertical -->
-        <pose>0 0 -0.004645 1.5707 0 0</pose>
+        <pose>0 0 -0.004645 0 0 0</pose>
 
         <!-- Enable visualization to see the rays in the GUI -->
         <visualize>true</visualize>
@@ -68,7 +68,7 @@
           <scan>
 
             <!-- The horizontal beams -->
-            <horizontal>
+            <vertical>
               <!-- The velodyne has 32 beams(samples) -->
               <samples>32</samples>
 
@@ -83,7 +83,7 @@
 
               <!-- Maximum angle in radians -->
               <max_angle>0.18622663</max_angle>
-            </horizontal>
+            </vertical>
           </scan>
 
           <!-- Range defines characteristics of an individual beam -->
