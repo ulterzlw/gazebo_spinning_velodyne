@@ -4,7 +4,7 @@
     <physics type="ode">
       <max_step_size>0.00001</max_step_size>
       <real_time_update_rate>10000</real_time_update_rate>
-      <gravity>0 0 0</gravity>
+      <gravity>0 0 -9.8</gravity>
     </physics>
     <!-- A global light source -->
     <include>
@@ -17,6 +17,7 @@
 
     <!-- A testing model that includes the Velodyne sensor model -->
     <model name="my_velodyne">
+      <pose>0 0 1 0 0 0</pose>
       <include>
         <uri>model://velodyne_hdl32</uri>
       </include>

@@ -126,24 +126,24 @@ class GazeboRosLidar : public RayPlugin {
     if (this->laser_connect_count_ == 0) this->laser_scan_sub_.reset();
   }
   void OnScan(ConstLaserScanStampedPtr& _msg) {
-    static double angle_min = this->parent_ray_sensor_->AngleMin().Radian();
-    static double angle_max = this->parent_ray_sensor_->AngleMax().Radian();
-    static double angle_resolution = this->parent_ray_sensor_->AngleResolution();
+    static float angle_min = this->parent_ray_sensor_->AngleMin().Radian();
+    static float angle_max = this->parent_ray_sensor_->AngleMax().Radian();
+    static float angle_resolution = this->parent_ray_sensor_->AngleResolution();
     static int ray_count = this->parent_ray_sensor_->RayCount();
     float measure_time = this->parent_ray_sensor_->LastMeasurementTime().Float();
-    measure_time = fmod(measure_time, 0.1);
+    measure_time = fmod(measure_time, 0.1f);
     bool new_frame(false);
-    if(!pc_.empty() && measure_time < this->pc_.back().azimuth)
+    if(!pc_.empty() && measure_time < 1e-3 && measure_time < this->pc_.back().azimuth)
       new_frame = true;
-    double angle_revolution = -measure_time/0.1*2*M_PI + M_PI;
+    float angle_revolution = -measure_time/0.1*2*M_PI + M_PI;
     for(int ring  = 0; ring< ray_count; ++ring){
-      double range = this->parent_ray_sensor_->LaserShape()->GetRange(ring);
+      float range = this->parent_ray_sensor_->LaserShape()->GetRange(ring);
       if(range < this->parent_ray_sensor_->RangeMax() && range > this->parent_ray_sensor_->RangeMin()) {
-        double angle = (double) ring * angle_resolution + angle_min;
+        float angle = (float) ring * angle_resolution + angle_min;
         float intensity = this->parent_ray_sensor_->LaserShape()->GetRetro(ring);
-        float x = range * cos(angle)*cos(angle_revolution);
-        float y = range * cos(angle)*sin(angle_revolution);
-        float z = range * sin(angle);
+        float x = range * cosf(angle) * cosf(angle_revolution);
+        float y = range * cosf(angle) * sinf(angle_revolution);
+        float z = range * sinf(angle);
         this->pc_.push_back(PointXYZIRT(x, y, z, intensity, ring, measure_time));
       }
     }
