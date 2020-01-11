@@ -57,7 +57,7 @@ class VelodynePlugin : public ModelPlugin {
     // Initialize ros, if it has not already bee initialized.
     if (!ros::isInitialized()) {
       int argc = 0;
-      char **argv = NULL;
+      char** argv = NULL;
       ros::init(argc, argv, "gazebo_client",
                 ros::init_options::NoSigintHandler);
     }
@@ -70,7 +70,7 @@ class VelodynePlugin : public ModelPlugin {
  private:
   /// \brief Set the velocity of the Velodyne
   /// \param[in] _vel New target velocity
-  void SetVelocity(const double &_vel) {
+  void SetVelocity(const double& _vel) {
     // Set the joint's target velocity.
     this->model->GetJointController()->SetVelocityTarget(
         this->joint->GetScopedName(), _vel);
