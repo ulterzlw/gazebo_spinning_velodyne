@@ -14,7 +14,6 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
-#include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
@@ -38,7 +37,7 @@
 
 #include <gazebo_plugins/PubQueue.h>
 
-#include <ignition/math/Rand.hh>
+#include "point_types.hpp"
 
 namespace gazebo {
 
@@ -127,13 +126,35 @@ class GazeboRosLidar : public RayPlugin {
     if (this->laser_connect_count_ == 0) this->laser_scan_sub_.reset();
   }
   void OnScan(ConstLaserScanStampedPtr& _msg) {
-    sensor_msgs::PointCloud2 pc2_msg;
-    pcl::PointCloud<pcl::PointXYZ> pc;
-    pc.push_back(pcl::PointXYZ(1,0,0));
-    pcl::toROSMsg(pc, pc2_msg);
-    pc2_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec());
-    pc2_msg.header.frame_id = this->frame_name_;
-    this->pub_queue_->push(pc2_msg, this->pub_);
+    static double angle_min = this->parent_ray_sensor_->AngleMin().Radian();
+    static double angle_max = this->parent_ray_sensor_->AngleMax().Radian();
+    static double angle_resolution = this->parent_ray_sensor_->AngleResolution();
+    static int ray_count = this->parent_ray_sensor_->RayCount();
+    float measure_time = this->parent_ray_sensor_->LastMeasurementTime().Float();
+    measure_time = fmod(measure_time, 0.1);
+    bool new_frame(false);
+    if(!pc_.empty() && measure_time < this->pc_.back().azimuth)
+      new_frame = true;
+    double angle_revolution = -measure_time/0.1*2*M_PI + M_PI;
+    for(int ring  = 0; ring< ray_count; ++ring){
+      double range = this->parent_ray_sensor_->LaserShape()->GetRange(ring);
+      if(range < this->parent_ray_sensor_->RangeMax() && range > this->parent_ray_sensor_->RangeMin()) {
+        double angle = (double) ring * angle_resolution + angle_min;
+        float intensity = this->parent_ray_sensor_->LaserShape()->GetRetro(ring);
+        float x = range * cos(angle)*cos(angle_revolution);
+        float y = range * cos(angle)*sin(angle_revolution);
+        float z = range * sin(angle);
+        this->pc_.push_back(PointXYZIRT(x, y, z, intensity, ring, measure_time));
+      }
+    }
+    if(new_frame){
+      sensor_msgs::PointCloud2 pc2_msg;
+      pcl::toROSMsg(this->pc_, pc2_msg);
+      pc2_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec());
+      pc2_msg.header.frame_id = this->frame_name_;
+      this->pub_queue_->push(pc2_msg, this->pub_);
+      this->pc_.clear();
+    }
   }
 
  private:
@@ -146,6 +167,7 @@ class GazeboRosLidar : public RayPlugin {
   ros::NodeHandle* rosnode_;
   ros::Publisher pub_;
   PubQueue<sensor_msgs::PointCloud2>::Ptr pub_queue_;
+  pcl::PointCloud<PointXYZIRT> pc_;
 
   std::string topic_name_;
   std::string frame_name_;
