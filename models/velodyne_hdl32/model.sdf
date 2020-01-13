@@ -96,7 +96,7 @@
             <max>70</max>
 
             <!-- Linear resolution of the beam -->
-            <resolution>0.02</resolution>
+            <resolution>0.0005</resolution>
           </range>
         </ray>
         <!-- test plugin -->
