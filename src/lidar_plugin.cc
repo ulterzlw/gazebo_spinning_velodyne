@@ -60,18 +60,16 @@ class GazeboRosLidar : public RayPlugin {
         dynamic_pointer_cast<sensors::RaySensor>(_parent);
     if (!parent_ray_sensor_) gzthrow(
         "GazeboRosLaser controller requires a Ray Sensor as its parent");
-    if (sdf->HasElement("robotNamespace"))
-    {
-      robot_namespace_ =  sdf->Get<std::string>("robotNamespace") +"/";
-      ROS_INFO_STREAM("<robotNamespace> set to: "<<robot_namespace_);
-    }
-    else
-    {
+    if (sdf->HasElement("robotNamespace")) {
+      robot_namespace_ = sdf->Get<std::string>("robotNamespace") + "/";
+      ROS_INFO_STREAM("<robotNamespace> set to: " << robot_namespace_);
+    } else {
       std::string scoped_name = parent_ray_sensor_->ParentName();
       std::size_t it = scoped_name.find("::");
 
-      robot_namespace_ = "/" +scoped_name.substr(0,it)+"/";
-      ROS_WARN_STREAM("missing <robotNamespace>, set to default: " << robot_namespace_);
+      robot_namespace_ = "/" + scoped_name.substr(0, it) + "/";
+      ROS_WARN_STREAM(
+          "missing <robotNamespace>, set to default: " << robot_namespace_);
     }
     if (!sdf->HasElement("frameName")) {
       ROS_INFO_NAMED("lidar",
@@ -143,12 +141,13 @@ class GazeboRosLidar : public RayPlugin {
     static float angle_resolution = parent_ray_sensor_->AngleResolution();
     static int ray_count = parent_ray_sensor_->RayCount();
     float
-        measure_time = parent_ray_sensor_->LastMeasurementTime().Float() - delay_time;
-    measure_time = fmod(measure_time, 1 / frequency);
+        measure_time =
+        parent_ray_sensor_->LastMeasurementTime().Float() - delay_time_;
+    measure_time = fmod(measure_time, 1 / frequency_);
     bool new_frame = !pc_.empty()
         && measure_time < 5e-3
         && pc_.back().azimuth > measure_time;
-    float angle_revolution = -measure_time * frequency * 2 * M_PI + M_PI;
+    float angle_revolution = -measure_time * frequency_ * 2 * M_PI + M_PI;
     for (int ring = 0; ring < ray_count; ++ring) {
       float range = parent_ray_sensor_->LaserShape()->GetRange(ring);
       if (range < parent_ray_sensor_->RangeMax()
@@ -160,17 +159,18 @@ class GazeboRosLidar : public RayPlugin {
         float y = range * cosf(angle) * sinf(angle_revolution);
         float z = range * sinf(angle);
         pc_.push_back(PointXYZIRT(x,
-                                        y,
-                                        z,
-                                        intensity,
-                                        ring,
-                                        measure_time));
+                                  y,
+                                  z,
+                                  intensity,
+                                  ring,
+                                  measure_time));
       }
     }
     if (new_frame) {
       sensor_msgs::PointCloud2 pc2_msg;
       pcl::toROSMsg(pc_, pc2_msg);
-      pc2_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec());
+      pc2_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec())
+          - ros::Duration(delay_time_);
       pc2_msg.header.frame_id = frame_name_;
       pub_queue_->push(pc2_msg, pub_);
       pc_.clear();
@@ -202,8 +202,8 @@ class GazeboRosLidar : public RayPlugin {
 
   PubMultiQueue pmq;
 
-  float frequency = 10;
-  float delay_time = 0.0009260680220259; // for unknown gazebo raysensor delay
+  float frequency_ = 10;
+  float delay_time_ = 0.0009260680220259; // for unknown gazebo raysensor delay
 };
 GZ_REGISTER_SENSOR_PLUGIN(GazeboRosLidar)
 }  // namespace gazebo
