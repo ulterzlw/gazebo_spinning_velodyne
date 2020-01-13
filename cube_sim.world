@@ -16,10 +16,9 @@
     </include>
 
     <model name="sensors">
-      <pose>0 0 1.5 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <include>
         <uri>model://velodyne_hdl32</uri>
-        <plugin name="velodyne_control" filename="libvelodyne_plugin.so"/>
       </include>
 
       <include>
@@ -29,6 +28,27 @@
         <parent>velodyne_hdl-32::base</parent>
         <child>imu_6_axis::base</child>
       </joint>
+    </model>
+
+    <model name="my_box">
+      <pose>1.5 0 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 1 1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
     </model>
 
   </world>

@@ -49,7 +49,7 @@
         <!-- Position the ray sensor based on the specification. Also rotate
            it by 90 degrees around the X-axis so that the <horizontal> rays
            become vertical -->
-        <pose>0 0 -0.004645 1.570796326794897 0 0 0</pose>
+        <pose>0 0 -0.004645 1.570796326794897 0 3.141592653589793</pose>
 
         <!-- Enable visualization to see the rays in the GUI -->
         <visualize>true</visualize>
@@ -133,7 +133,7 @@
       <!-- The visual is mostly a copy of the collision -->
       <visual name="top_visual">
         <!-- Lower the mesh by half the height, and rotate by 90 degrees -->
-        <pose>0 0 -0.0376785 0 0 1.5707</pose>
+        <pose>0 0 -0.0376785 0 0 -1.570796326794897</pose>
         <geometry>
           <!-- The mesh tag indicates that we will use a 3D mesh as
              a visual -->
@@ -173,5 +173,6 @@
         </limit>
       </axis>
     </joint>
+    <plugin name="velodyne_control" filename="libvelodyne_plugin.so"/>
   </model>
 </sdf>
