@@ -83,6 +83,11 @@
 <!--            </z>-->
 <!--          </linear_acceleration>-->
 <!--        </imu>-->
+        <plugin name="plugin" filename="libgazebo_ros_imu_sensor.so">
+          <topicName>imu</topicName>
+          <updateRateHZ>200</updateRateHZ>
+          <frameName>imu_link</frameName>
+        </plugin>
       </sensor>
     </link>
   </model>

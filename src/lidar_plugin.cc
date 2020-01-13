@@ -46,36 +46,48 @@ class GazeboRosLidar : public RayPlugin {
  public:
   GazeboRosLidar() = default;
   ~GazeboRosLidar() {
-    this->rosnode_->shutdown();
-    delete this->rosnode_;
+    rosnode_->shutdown();
+    delete rosnode_;
   }
 
   void Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf) {
-    RayPlugin::Load(_parent, this->sdf);  // todo: whey sdf
+    RayPlugin::Load(_parent, sdf);  // todo: whey sdf
     std::string worldName = _parent->WorldName();
-    this->world_ = physics::get_world(worldName);
-    this->sdf = _sdf;
+    world_ = physics::get_world(worldName);
+    sdf = _sdf;
     GAZEBO_SENSORS_USING_DYNAMIC_POINTER_CAST;
-    this->parent_ray_sensor_ =
+    parent_ray_sensor_ =
         dynamic_pointer_cast<sensors::RaySensor>(_parent);
-    if (!this->parent_ray_sensor_) gzthrow(
+    if (!parent_ray_sensor_) gzthrow(
         "GazeboRosLaser controller requires a Ray Sensor as its parent");
-    this->robot_namespace_ = GetRobotNamespace(_parent, _sdf, "Lidar");
-    if (!this->sdf->HasElement("frameName")) {
+    if (sdf->HasElement("robotNamespace"))
+    {
+      robot_namespace_ =  sdf->Get<std::string>("robotNamespace") +"/";
+      ROS_INFO_STREAM("<robotNamespace> set to: "<<robot_namespace_);
+    }
+    else
+    {
+      std::string scoped_name = parent_ray_sensor_->ParentName();
+      std::size_t it = scoped_name.find("::");
+
+      robot_namespace_ = "/" +scoped_name.substr(0,it)+"/";
+      ROS_WARN_STREAM("missing <robotNamespace>, set to default: " << robot_namespace_);
+    }
+    if (!sdf->HasElement("frameName")) {
       ROS_INFO_NAMED("lidar",
                      "Lider plugin missing <frameName>, default to /world");
-      this->frame_name_ = "/world";
+      frame_name_ = "/world";
     } else {
-      this->frame_name_ = this->sdf->Get<std::string>("frameName");
+      frame_name_ = sdf->Get<std::string>("frameName");
     }
-    if (!this->sdf->HasElement("topicName")) {
+    if (!sdf->HasElement("topicName")) {
       ROS_INFO_NAMED("lidar",
                      "Lidar plugin missing <topicNmae>, default to /world");
-      this->topic_name_ = "/world";
+      topic_name_ = "/world";
     } else {
-      this->topic_name_ = this->sdf->Get<std::string>("topicName");
+      topic_name_ = sdf->Get<std::string>("topicName");
     }
-    this->laser_connect_count_ = 0;
+    laser_connect_count_ = 0;
     if (!ros::isInitialized()) {
       ROS_FATAL_STREAM_NAMED(
           "lidar",
@@ -83,72 +95,71 @@ class GazeboRosLidar : public RayPlugin {
       return;
     }
     ROS_INFO_NAMED("laser", "Starting Laser Plugin (namespace = %s",
-                   this->robot_namespace_.c_str());
-    this->deferred_load_thread_ =
+                   robot_namespace_.c_str());
+    deferred_load_thread_ =
         boost::thread(boost::bind(&GazeboRosLidar::LoadThread, this));
   }
 
  private:
   void LoadThread() {
-    this->gazebo_node_ =
+    gazebo_node_ =
         gazebo::transport::NodePtr(new gazebo::transport::Node());
-    this->gazebo_node_->Init(this->world_name_);
-    this->pmq.startServiceThread();
-    this->rosnode_ = new ros::NodeHandle(this->robot_namespace_);
-    this->tf_prefix_ = tf::getPrefixParam(*this->rosnode_);
-    if (this->tf_prefix_.empty()) {
-      this->tf_prefix_ = this->robot_namespace_;
-      boost::trim_right_if(this->tf_prefix_, boost::is_any_of("/"));
+    gazebo_node_->Init(world_name_);
+    pmq.startServiceThread();
+    rosnode_ = new ros::NodeHandle(robot_namespace_);
+    tf_prefix_ = tf::getPrefixParam(*rosnode_);
+    if (tf_prefix_.empty()) {
+      tf_prefix_ = robot_namespace_;
+      boost::trim_right_if(tf_prefix_, boost::is_any_of("/"));
     }
     ROS_INFO_NAMED("lidar",
                    "Lidar Plugin (namespace = %s) <tf_prefix_>, set t \"%s\"",
-                   this->robot_namespace_.c_str(), this->tf_prefix_.c_str());
-    this->frame_name_ = tf::resolve(this->tf_prefix_, this->frame_name_);
-    if (this->topic_name_ != "") {
+                   robot_namespace_.c_str(), tf_prefix_.c_str());
+    if (topic_name_ != "") {
       ros::AdvertiseOptions ao =
           ros::AdvertiseOptions::create<sensor_msgs::PointCloud2>(
-              this->topic_name_, 1,
+              topic_name_, 1,
               boost::bind(&GazeboRosLidar::LaserConnect, this),
               boost::bind(&GazeboRosLidar::LaserDisconnect, this),
               ros::VoidPtr(), NULL);
-      this->pub_ = this->rosnode_->advertise(ao);
-      this->pub_queue_ = this->pmq.addPub<sensor_msgs::PointCloud2>();
+      pub_ = rosnode_->advertise(ao);
+      pub_queue_ = pmq.addPub<sensor_msgs::PointCloud2>();
     }
-    this->parent_ray_sensor_->SetActive(false);
+    parent_ray_sensor_->SetActive(false);
   }
   void LaserConnect() {
-    this->laser_connect_count_++;
-    if (this->laser_connect_count_ == 1)
-      this->laser_scan_sub_ = this->gazebo_node_->Subscribe(
-          this->parent_ray_sensor_->Topic(), &GazeboRosLidar::OnScan, this);
+    laser_connect_count_++;
+    if (laser_connect_count_ == 1)
+      laser_scan_sub_ = gazebo_node_->Subscribe(
+          parent_ray_sensor_->Topic(), &GazeboRosLidar::OnScan, this);
   }
   void LaserDisconnect() {
-    this->laser_connect_count_--;
-    if (this->laser_connect_count_ == 0) this->laser_scan_sub_.reset();
+    laser_connect_count_--;
+    if (laser_connect_count_ == 0) laser_scan_sub_.reset();
   }
   void OnScan(ConstLaserScanStampedPtr& _msg) {
-    static float angle_min = this->parent_ray_sensor_->AngleMin().Radian();
-    static float angle_max = this->parent_ray_sensor_->AngleMax().Radian();
-    static float angle_resolution = this->parent_ray_sensor_->AngleResolution();
-    static int ray_count = this->parent_ray_sensor_->RayCount();
+    static float angle_min = parent_ray_sensor_->AngleMin().Radian();
+    static float angle_max = parent_ray_sensor_->AngleMax().Radian();
+    static float angle_resolution = parent_ray_sensor_->AngleResolution();
+    static int ray_count = parent_ray_sensor_->RayCount();
     float
-        measure_time = this->parent_ray_sensor_->LastMeasurementTime().Float() - delay_time;
+        measure_time = parent_ray_sensor_->LastMeasurementTime().Float() - delay_time;
     measure_time = fmod(measure_time, 1 / frequency);
     bool new_frame = !pc_.empty()
         && measure_time < 5e-3
-        && this->pc_.back().azimuth > measure_time;
+        && pc_.back().azimuth > measure_time;
     float angle_revolution = -measure_time * frequency * 2 * M_PI + M_PI;
     for (int ring = 0; ring < ray_count; ++ring) {
-      float range = this->parent_ray_sensor_->LaserShape()->GetRange(ring);
-      if (range < this->parent_ray_sensor_->RangeMax()
-          && range > this->parent_ray_sensor_->RangeMin()) {
+      float range = parent_ray_sensor_->LaserShape()->GetRange(ring);
+      if (range < parent_ray_sensor_->RangeMax()
+          && range > parent_ray_sensor_->RangeMin()) {
         float angle = (float) ring * angle_resolution + angle_min;
         float
-            intensity = this->parent_ray_sensor_->LaserShape()->GetRetro(ring);
+            intensity = parent_ray_sensor_->LaserShape()->GetRetro(ring);
         float x = range * cosf(angle) * cosf(angle_revolution);
         float y = range * cosf(angle) * sinf(angle_revolution);
         float z = range * sinf(angle);
-        this->pc_.push_back(PointXYZIRT(x,
+        pc_.push_back(PointXYZIRT(x,
                                         y,
                                         z,
                                         intensity,
@@ -158,11 +169,11 @@ class GazeboRosLidar : public RayPlugin {
     }
     if (new_frame) {
       sensor_msgs::PointCloud2 pc2_msg;
-      pcl::toROSMsg(this->pc_, pc2_msg);
+      pcl::toROSMsg(pc_, pc2_msg);
       pc2_msg.header.stamp = ros::Time(_msg->time().sec(), _msg->time().nsec());
-      pc2_msg.header.frame_id = this->frame_name_;
-      this->pub_queue_->push(pc2_msg, this->pub_);
-      this->pc_.clear();
+      pc2_msg.header.frame_id = frame_name_;
+      pub_queue_->push(pc2_msg, pub_);
+      pc_.clear();
     }
   }
 
