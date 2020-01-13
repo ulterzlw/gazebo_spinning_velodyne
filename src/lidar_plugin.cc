@@ -132,13 +132,12 @@ class GazeboRosLidar : public RayPlugin {
     static float angle_resolution = this->parent_ray_sensor_->AngleResolution();
     static int ray_count = this->parent_ray_sensor_->RayCount();
     float
-        measure_time = this->parent_ray_sensor_->LastMeasurementTime().Float();
-    measure_time = fmod(measure_time, 0.1f);
-    bool new_frame(false);
-    if (!pc_.empty() && measure_time < 1e-3
-        && measure_time < this->pc_.back().azimuth)
-      new_frame = true;
-    float angle_revolution = -measure_time / 0.1 * 2 * M_PI + M_PI;
+        measure_time = this->parent_ray_sensor_->LastMeasurementTime().Float() - delay_time;
+    measure_time = fmod(measure_time, 1 / frequency);
+    bool new_frame = !pc_.empty()
+        && measure_time < 5e-3
+        && this->pc_.back().azimuth > measure_time;
+    float angle_revolution = -measure_time * frequency * 2 * M_PI + M_PI;
     for (int ring = 0; ring < ray_count; ++ring) {
       float range = this->parent_ray_sensor_->LaserShape()->GetRange(ring);
       if (range < this->parent_ray_sensor_->RangeMax()
@@ -191,6 +190,9 @@ class GazeboRosLidar : public RayPlugin {
   gazebo::transport::SubscriberPtr laser_scan_sub_;
 
   PubMultiQueue pmq;
+
+  float frequency = 10;
+  float delay_time = 0.0009260680220259; // for unknown gazebo raysensor delay
 };
 GZ_REGISTER_SENSOR_PLUGIN(GazeboRosLidar)
 }  // namespace gazebo

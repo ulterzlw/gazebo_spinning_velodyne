@@ -16,7 +16,7 @@
     </include>
 
     <model name="sensors">
-      <pose>0 0 0 0 0 0</pose>
+      <pose>0 0 1.5 0 0 0</pose>
       <include>
         <uri>model://velodyne_hdl32</uri>
       </include>
@@ -31,25 +31,45 @@
     </model>
 
     <model name="my_box">
-      <pose>1.5 0 0.5 0 0 0</pose>
+      <pose>-1.5 0 0.5 0 0 0</pose>
       <static>true</static>
       <link name="link">
         <collision name="collision">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 10 1</size>
             </box>
           </geometry>
         </collision>
         <visual name="visual">
           <geometry>
             <box>
-              <size>1 1 1</size>
+              <size>1 10 1</size>
             </box>
           </geometry>
         </visual>
       </link>
     </model>
 
+    <model name="my_box2">
+      <pose>4.5 0 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>1 2 1</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1 2 1</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>
