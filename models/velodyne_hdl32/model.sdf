@@ -101,8 +101,8 @@
         </ray>
         <!-- test plugin -->
         <plugin name="plugin_1" filename="liblidar_plugin.so">
-          <topicName>test_laser</topicName>
-          <frameName>base_link</frameName>
+          <topicName>velodyne_points</topicName>
+          <frameName>velodyne_link</frameName>
         </plugin>
       </sensor>
 

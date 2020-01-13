@@ -1,9 +1,13 @@
-#ifndef _VELODYNE_PLUGIN_HH_
-#define _VELODYNE_PLUGIN_HH_
+//
+// Created by Linwei Zheng on 7/1/2020.
+// Copyright (c) 2020 Linwei Zheng. All rights reserved.
+//
+
+#ifndef VELODYNE_PLUGIN_H
+#define VELODYNE_PLUGIN_H
 
 #include <ros/callback_queue.h>
 #include <ros/ros.h>
-#include <ros/subscribe_options.h>
 #include <std_msgs/Float32.h>
 #include <gazebo/gazebo.hh>
 #include <gazebo/msgs/msgs.hh>

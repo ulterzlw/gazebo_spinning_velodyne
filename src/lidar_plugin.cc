@@ -1,7 +1,11 @@
-#ifndef LIDAR_PLUGIN_HH
-#define LIDAR_PLUGIN_HH
+//
+// Created by Linwei Zheng on 11/1/2020.
+// Copyright (c) 2020 Linwei Zheng. All rights reserved.
+//
 
-#include <assert.h>
+#ifndef LIDAR_PLUGIN_H
+#define LIDAR_PLUGIN_H
+
 #include <algorithm>
 #include <string>
 
@@ -18,10 +22,8 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <gazebo_plugins/gazebo_ros_utils.h>
-#include <gazebo/common/Events.hh>
 #include <gazebo/common/Exception.hh>
 #include <gazebo/common/Plugin.hh>
-#include <gazebo/common/Time.hh>
 #include <gazebo/msgs/MessageTypes.hh>
 #include <gazebo/physics/HingeJoint.hh>
 #include <gazebo/physics/World.hh>
@@ -32,12 +34,11 @@
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/transport/TransportTypes.hh>
 #include <gazebo/transport/transport.hh>
-#include <sdf/Param.hh>
 #include <sdf/sdf.hh>
 
 #include <gazebo_plugins/PubQueue.h>
 
-#include "point_types.hpp"
+#include "point_types.h"
 
 namespace gazebo {
 

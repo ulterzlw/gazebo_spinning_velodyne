@@ -17,7 +17,7 @@
 
     <!-- A testing model that includes the Velodyne sensor model -->
     <model name="my_velodyne">
-      <pose>0 0 1 0 0 0</pose>
+      <pose>0 0 1.5 0 0 0</pose>
       <include>
         <uri>model://velodyne_hdl32</uri>
       </include>
