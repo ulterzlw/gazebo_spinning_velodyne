@@ -1,7 +1,13 @@
 BASE=$(cd "`dirname "${BASH_SOURCE[0]}"`";pwd)
-mkdir -p $BASE/build
+if [ ! -e $BASE/build ]
+then
+  mkdir -p $BASE/build
+fi
 cd $BASE/build
-cmake ..
+if [ ! -e ./Makefile ]
+then
+  cmake ..
+fi
 make
 cd - >> /dev/null
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(cd $BASE/build;pwd)
