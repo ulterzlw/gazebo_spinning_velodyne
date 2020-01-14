@@ -136,25 +136,23 @@ class GazeboRosLidar : public RayPlugin {
     if (laser_connect_count_ == 0) laser_scan_sub_.reset();
   }
   void OnScan(ConstLaserScanStampedPtr& _msg) {
-    static float angle_min = parent_ray_sensor_->AngleMin().Radian();
-    static float angle_max = parent_ray_sensor_->AngleMax().Radian();
-    static float angle_resolution = parent_ray_sensor_->AngleResolution();
-    static int ray_count = parent_ray_sensor_->RayCount();
-    float
-        measure_time =
-        parent_ray_sensor_->LastMeasurementTime().Float() - delay_time_;
+    static float angle_min = _msg->scan().angle_min();
+    static float angle_max = _msg->scan().angle_max();
+    static float angle_resolution = _msg->scan().angle_step();
+    static int ray_count = _msg->scan().ranges_size();
+    float measure_time =
+        _msg->time().sec() + _msg->time().nsec() * 1e-9 - delay_time_;
     measure_time = fmod(measure_time, 1 / frequency_);
     bool new_frame = !pc_.empty()
         && measure_time < 5e-3
         && pc_.back().azimuth > measure_time;
     float angle_revolution = -measure_time * frequency_ * 2 * M_PI + M_PI;
     for (int ring = 0; ring < ray_count; ++ring) {
-      float range = parent_ray_sensor_->LaserShape()->GetRange(ring);
-      if (range < parent_ray_sensor_->RangeMax()
-          && range > parent_ray_sensor_->RangeMin()) {
+      float range = _msg->scan().ranges(ring);
+      if (range < _msg->scan().range_max()
+          && range > _msg->scan().range_min()) {
         float angle = (float) ring * angle_resolution + angle_min;
-        float
-            intensity = parent_ray_sensor_->LaserShape()->GetRetro(ring);
+        float intensity = _msg->scan().intensities(ring);
         float x = range * cosf(angle) * cosf(angle_revolution);
         float y = range * cosf(angle) * sinf(angle_revolution);
         float z = range * sinf(angle);
