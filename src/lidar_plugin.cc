@@ -203,7 +203,7 @@ class GazeboRosLidar : public RayPlugin {
   PubMultiQueue pmq;
 
   float frequency_ = 10;
-  float delay_time_ = 0.0009260680220259; // for unknown gazebo raysensor delay
+  float delay_time_ = 0.0009141717454596; // for unknown gazebo raysensor delay
 };
 GZ_REGISTER_SENSOR_PLUGIN(GazeboRosLidar)
 }  // namespace gazebo
